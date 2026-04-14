@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Controle de Fiados</title>
+    <style>
+        :root {
+            --bg: #f5f7fa;
+            --card: #ffffff;
+            --text: #333;
+            --secondary: #666;
+            --border: #ddd;
+            --green: #27ae60;
+            --red: #e74c3c;
+            --blue: #3498db;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; }
+
+        .btn { 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 12px; 
+            font-size: 14px; 
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:active { opacity: 0.7; }
+        .btn-green { background: var(--green); color: white; width: 100%; }
+        .btn-red { background: var(--red); color: white; }
+        .btn-small { padding: 6px 10px; font-size: 12px; }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        input { 
+            border: 1px solid var(--border); 
+            border-radius: 6px; 
+            padding: 10px; 
+            font-size: 16px; /* Evita zoom automático no iPhone */
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-top: 5px;
+        }
+
+        .grid-resumo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .resumo-item {
+            background: var(--card);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .resumo-valor { font-size: 18px; font-weight: bold; display: block; }
+        .label-pequeno { font-size: 11px; color: var(--secondary); text-transform: uppercase; }
+
+        .cliente-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .item-fiado {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f9f9f9;
+        }
+
+        #loading { text-align: center; padding: 50px; color: var(--secondary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="loading">Carregando dados...</div>
+
+    <div id="app" style="display:none;">
+        <div id="resumo" class="grid-resumo"></div>
+
+        <div class="card">
+            <h3 style="margin-top:0; font-size: 16px;">Novo Registro</h3>
+            <div style="margin-bottom: 10px;">
+                <label class="label-pequeno">Nome do Cliente</label>
+                <input id="inp-nome" type="text" placeholder="Ex: João Silva" />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div>
+                    <label class="label-pequeno">Data</label>
+                    <input id="inp-data" type="date" />
+                </div>
+                <div>
+                    <label class="label-pequeno">Qtd Pães</label>
+                    <input id="inp-paes" type="number" placeholder="0" />
+                </div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label class="label-pequeno">Valor Total (R$)</label>
+                <input id="inp-valor" type="number" step="0.01" placeholder="0.00" />
+            </div>
+            <button class="btn btn-green" onclick="adicionarFiado()">SALVAR REGISTRO</button>
+            <p id="msg-erro" style="color: var(--red); font-size: 12px; margin-top: 10px; text-align: center;"></p>
+        </div>
+
+        <div id="lista-clientes"></div>
+    </div>
+</div>
+
+<script>
+let fiados = [];
+const hoje = new Date().toISOString().split('T')[0];
+
+// CARREGAR LOCALSTORAGE
+function carregar() {
+    const dadosSalvos = localStorage.getItem('meus_fiados');
+    fiados = dadosSalvos ? JSON.parse(dadosSalvos) : [];
+    
+    document.getElementById('inp-data').value = hoje;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderizar();
+}
+
+// SALVAR LOCALSTORAGE
+function salvar() {
+    localStorage.setItem('meus_fiados', JSON.stringify(fiados));
+}
+
+function adicionarFiado() {
+    const nome = document.getElementById('inp-nome').value.trim();
+    const data = document.getElementById('inp-data').value;
+    const paes = parseInt(document.getElementById('inp-paes').value);
+    const valor = parseFloat(document.getElementById('inp-valor').value);
+    const erro = document.getElementById('msg-erro');
+
+    if (!nome || !data || isNaN(paes) || isNaN(valor)) {
+        erro.textContent = 'Preencha todos os campos corretamente!';
+        return;
+    }
+    erro.textContent = '';
+
+    fiados.push({ id: Date.now(), nome, data, paes, valor, pago: false });
+    salvar();
+
+    // Limpar campos
+    document.getElementById('inp-nome').value = '';
+    document.getElementById('inp-paes').value = '';
+    document.getElementById('inp-valor').value = '';
+    
+    renderizar();
+}
+
+function marcarPago(id) {
+    fiados = fiados.map(f => f.id === id ? { ...f, pago: true } : f);
+    salvar();
+    renderizar();
+}
+
+function excluir(id) {
+    if(confirm("Deseja realmente excluir este registro?")) {
+        fiados = fiados.filter(f => f.id !== id);
+        salvar();
+        renderizar();
+    }
+}
+
+function formatData(d) {
+    const [y, m, dia] = d.split('-');
+    return `${dia}/${m}`;
+}
+
+function renderizar() {
+    const totalDev = fiados.filter(f => !f.pago).reduce((s, f) => s + f.valor, 0);
+    const totalPago = fiados.filter(f => f.pago).reduce((s, f) => s + f.valor, 0);
+
+    document.getElementById('resumo').innerHTML = `
+        <div class="resumo-item">
+            <span class="label-pequeno">A receber</span>
+            <span class="resumo-valor" style="color: var(--red)">R$ ${totalDev.toFixed(2)}</span>
+        </div>
+        <div class="resumo-item">
+            <span class="label-pequeno">Já pago</span>
+            <span class="resumo-valor" style="color: var(--green)">R$ ${totalPago.toFixed(2)}</span>
+        </div>
+    `;
+
+    const clientes = {};
+    fiados.forEach(f => {
+        const chave = f.nome.toLowerCase();
+        if (!clientes[chave]) clientes[chave] = { nome: f.nome, registros: [] };
+        clientes[chave].registros.push(f);
+    });
+
+    const lista = document.getElementById('lista-clientes');
+    const keys = Object.keys(clientes);
+
+    if (keys.length === 0) {
+        lista.innerHTML = `<p style="text-align: center; color: var(--secondary);">Nenhum fiado registrado.</p>`;
+        return;
+    }
+
+    lista.innerHTML = keys.map(k => {
+        const c = clientes[k];
+        const abertos = c.registros.filter(r => !r.pago);
+        const totalAberto = abertos.reduce((s, r) => s + r.valor, 0);
+
+        return `
+            <div class="card">
+                <div class="cliente-header">
+                    <div>
+                        <strong style="font-size: 16px;">${c.nome}</strong>
+                        <div class="label-pequeno">${c.registros.length} compras no total</div>
+                    </div>
+                    <div style="text-align: right">
+                        <span class="label-pequeno">Devendo</span>
+                        <div style="color: var(--red); font-weight: bold;">R$ ${totalAberto.toFixed(2)}</div>
+                    </div>
+                </div>
+                
+                ${abertos.map(r => `
+                    <div class="item-fiado">
+                        <span style="font-size: 14px;">${formatData(r.data)} (${r.paes} pães)</span>
+                        <div>
+                            <span style="font-weight: bold; margin-right: 10px;">R$ ${r.valor.toFixed(2)}</span>
+                            <button class="btn btn-small btn-green" onclick="marcarPago(${r.id})">OK</button>
+                            <button class="btn btn-small btn-red" onclick="excluir(${r.id})">X</button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }).join('');
+}
+
+carregar();
+</script>
+
+</body>
+</html>
