@@ -1,5 +1,5 @@
 const CACHE = 'fiados-v1';
-const ARQUIVOS = ['/', '/index.html', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
+const ARQUIVOS = ['/fiados/', '/fiados/index.html', '/fiados/manifest.json', '/fiados/icons/icon-192.png', '/fiados/icons/icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ARQUIVOS)));

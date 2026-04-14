@@ -2,7 +2,7 @@
   "name": "Fiados da Padaria",
   "short_name": "Fiados",
   "description": "Controle de fiados das vendas diárias",
-  "start_url": "/",
+  "start_url": "/fiados/",
   "display": "standalone",
   "background_color": "#f5f5f0",
   "theme_color": "#1D9E75",
