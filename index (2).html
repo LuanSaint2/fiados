@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F6E56" />
+  <meta name="description" content="App para controle de fiados da padaria" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Fiados" />
+  <link rel="manifest" href="/fiados/manifest.json" />
+  <link rel="apple-touch-icon" href="/fiados/icons/icon-192.png" />
+  <title>Fiados da Padaria</title>
+  <style>
+    :root {
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --primary-soft: rgba(16, 185, 129, 0.12);
+      --danger: #EF4444;
+      --danger-soft: rgba(239, 68, 68, 0.12);
+      --bg: #F3F4F6;
+      --surface: #FFFFFF;
+      --surface-2: #F9FAFB;
+      --text: #111827;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --radius: 16px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #10B981;
+        --primary-dark: #059669;
+        --primary-soft: rgba(16, 185, 129, 0.18);
+        --danger: #F87171;
+        --danger-soft: rgba(248, 113, 113, 0.18);
+        --bg: #0F172A;
+        --surface: #1E293B;
+        --surface-2: #334155;
+        --text: #F8FAFC;
+        --text-muted: #94A3B8;
+        --border: #334155;
+        --shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 100px;
+      overflow-x: hidden;
+    }
+
+    /* Cabeçalho Moderno */
+    header {
+      background: linear-gradient(135deg, #0F6E56 0%, #10B981 100%);
+      color: white;
+      padding: calc(16px + env(safe-area-inset-top)) 20px 28px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: 0 4px 20px rgba(15, 110, 86, 0.2);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-sub {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .btn-config {
+      background: rgba(255, 255, 255, 0.18);
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+
+    .container {
+      padding: 0 16px;
+      max-width: 600px;
+      margin: -18px auto 0;
+    }
+
+    /* Cartões de Resumo */
+    .resumo {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .card-resumo {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-resumo .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .card-resumo .valor {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* Pesquisa e Filtros */
+    .controles {
+      margin-bottom: 16px;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 13px 16px 13px 40px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--surface);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Cartão de Cliente */
+    .cliente-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .cliente-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cliente-perfil {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .cliente-info {
+      min-width: 0;
+    }
+
+    .cliente-nome {
+      font-weight: 700;
+      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cliente-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .cliente-total {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .cliente-total .label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .cliente-total .valor {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--danger);
+    }
+
+    .cliente-total .valor.quitado {
+      color: var(--primary);
+    }
+
+    /* Ações Rápidas do Cliente */
+    .cliente-quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-quick {
+      flex: 1;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-quick-add {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-quick-payall {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+    }
+
+    /* Lista de Registos */
+    .registros {
+      margin-top: 12px;
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 4px 12px;
+    }
+
+    .registro-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .registro-row:last-child {
+      border-bottom: none;
+    }
+
+    .registro-data {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .registro-paes {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 6px;
+      background: var(--surface);
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .acoes {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .registro-valor {
+      font-size: 14px;
+      font-weight: 700;
+      margin-right: 4px;
+    }
+
+    .btn-icon {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-pago {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-del {
+      background: var(--danger-soft);
+      color: var(--danger);
+      padding: 0 10px;
+    }
+
+    .pagos-info {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .vazio {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 15px;
+      padding: 3rem 1rem;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+    }
+
+    /* Botão Flutuante (FAB) */
+    .fab {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      right: 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 28px;
+      height: 56px;
+      padding: 0 22px;
+      font-size: 15px;
+      font-weight: 700;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      z-index: 20;
+      transition: transform 0.15s;
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    /* Modal / Bottom Sheet */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 30;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .bottom-sheet {
+      background: var(--surface);
+      width: 100%;
+      max-width: 600px;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+      animation: slideUp 0.25s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 10px;
+      margin: 0 auto 16px;
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .sheet-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .btn-close {
+      background: var(--surface-2);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px; /* 16px evita auto-zoom no iOS */
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* Stepper de Pães */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-step {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .stepper input {
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* Sugestões de Clientes */
+    .chips-clientes {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 6px 0 2px;
+      scrollbar-width: none;
+    }
+
+    .chips-clientes::-webkit-scrollbar { display: none; }
+
+    .chip {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+
+    .erro {
+      font-size: 13px;
+      color: var(--danger);
+      margin-top: 8px;
+      display: block;
+      text-align: center;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-top">
+      <div>
+        <div class="header-title">Fiados da Padaria</div>
+        <div class="header-sub" id="header-sub">A carregar...</div>
+      </div>
+      <button class="btn-config" onclick="configurarPreco()" id="btn-preco">
+        Pão: R$ 0,50
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="resumo" id="resumo"></div>
+
+    <div class="controles">
+      <div class="search-box">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="search" id="inp-busca" placeholder="Buscar cliente..." oninput="renderizar()" />
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="tab-abertos" onclick="mudarFiltro('abertos')">Em aberto</button>
+        <button class="tab" id="tab-quitados" onclick="mudarFiltro('quitados')">Quitados</button>
+        <button class="tab" id="tab-todos" onclick="mudarFiltro('todos')">Todos</button>
+      </div>
+    </div>
+
+    <div id="lista-clientes"></div>
+  </div>
+
+  <!-- Botão Flutuante Principal -->
+  <button class="fab" onclick="abrirModal()">
+    <span style="font-size:22px; line-height:1">+</span> Novo Fiado
+  </button>
+
+  <!-- Modal / Bottom Sheet para Registar Fiado -->
+  <div class="modal-overlay" id="modal" onclick="fecharModalFora(event)">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>Registrar fiado</h2>
+        <button class="btn-close" onclick="fecharModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label>Nome do cliente</label>
+        <input id="inp-nome" type="text" placeholder="Ex: João Silva" autocomplete="off" />
+        <div class="chips-clientes" id="chips-clientes"></div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Qtd de pães</label>
+          <div class="stepper">
+            <button type="button" class="btn-step" onclick="ajustarPaes(-1)">−</button>
+            <input id="inp-paes" type="number" inputmode="numeric" placeholder="0" min="1" oninput="calcularValorAuto()" />
+            <button type="button" class="btn-step" onclick="ajustarPaes(1)">+</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Valor total (R$)</label>
+          <input id="inp-valor" type="number" inputmode="decimal" placeholder="0,00" step="0.01" min="0" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Data</label>
+        <input id="inp-data" type="date" />
+      </div>
+
+      <button class="btn-submit" onclick="adicionarFiado()">Salvar Fiado</button>
+      <span class="erro" id="msg-erro"></span>
+    </div>
+  </div>
+
+  <script>
+    let fiados = [];
+    let filtroAtual = 'abertos';
+    let precoUnidade = parseFloat(localStorage.getItem('preco-pao-padaria')) || 0.50;
+
+    function obterDataHoje() {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().split('T')[0];
+    }
+
+    function carregar() {
+      try {
+        const dados = localStorage.getItem('fiados-padaria');
+        fiados = dados ? JSON.parse(dados) : [];
+      } catch(e) {
+        fiados = [];
+      }
+      atualizarBotaoPreco();
+      renderizar();
+    }
+
+    function salvar() {
+      localStorage.setItem('fiados-padaria', JSON.stringify(fiados));
+    }
+
+    function configurarPreco() {
+      const novo = prompt('Preço padrão por 1 pão (R$):', precoUnidade.toFixed(2));
+      if (novo !== null) {
+        const val = parseFloat(novo.replace(',', '.'));
+        if (!isNaN(val) && val >= 0) {
+          precoUnidade = val;
+          localStorage.setItem('preco-pao-padaria', precoUnidade);
+          atualizarBotaoPreco();
+        }
+      }
+    }
+
+    function atualizarBotaoPreco() {
+      document.getElementById('btn-preco').textContent = `Pão: R$ ${precoUnidade.toFixed(2).replace('.', ',')}`;
+    }
+
+    function abrirModal(nomePredefinido = '') {
+      document.getElementById('msg-erro').textContent = '';
+      document.getElementById('inp-nome').value = nomePredefinido;
+      document.getElementById('inp-paes').value = '';
+      document.getElementById('inp-valor').value = '';
+      document.getElementById('inp-data').value = obterDataHoje();
+
+      renderizarChipsClientes();
+      document.getElementById('modal').classList.add('open');
+
+      setTimeout(() => {
+        if (nomePredefinido) {
+          document.getElementById('inp-paes').focus();
+        } else {
+          document.getElementById('inp-nome').focus();
+        }
+      }, 100);
+    }
+
+    function fecharModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+
+    function fecharModalFora(e) {
+      if (e.target.id === 'modal') fecharModal();
+    }
+
+    function renderizarChipsClientes() {
+      const nomesUnicos = [...new Set(fiados.map(f => f.nome.trim()))].slice(0, 8);
+      const container = document.getElementById('chips-clientes');
+      if (nomesUnicos.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = nomesUnicos.map(nome =>
+        `<button type="button" class="chip" onclick="selecionarClienteChip('${nome.replace(/'/g, "\\'")}')">${nome}</button>`
+      ).join('');
+    }
+
+    function selecionarClienteChip(nome) {
+      document.getElementById('inp-nome').value = nome;
+      document.getElementById('inp-paes').focus();
+    }
+
+    function ajustarPaes(delta) {
+      const inp = document.getElementById('inp-paes');
+      let atual = parseInt(inp.value) || 0;
+      atual = Math.max(1, atual + delta);
+      inp.value = atual;
+      calcularValorAuto();
+    }
+
+    function calcularValorAuto() {
+      const paes = parseInt(document.getElementById('inp-paes').value);
+      if (!isNaN(paes) && paes > 0 && precoUnidade > 0) {
+        document.getElementById('inp-valor').value = (paes * precoUnidade).toFixed(2);
+      }
+    }
+
+    function adicionarFiado() {
+      const nome = document.getElementById('inp-nome').value.trim();
+      const data = document.getElementById('inp-data').value;
+      const paes = parseInt(document.getElementById('inp-paes').value);
+      const valor = parseFloat(document.getElementById('inp-valor').value);
+      const erro = document.getElementById('msg-erro');
+
+      if (!nome || !data || isNaN(paes) || isNaN(valor)) {
+        erro.textContent = 'Preencha todos os campos corretamente!';
+        return;
+      }
+
+      fiados.push({ id: Date.now(), nome, data, paes, valor, pago: false });
+      salvar();
+      fecharModal();
+      renderizar();
+    }
+
+    function marcarPago(id) {
+      fiados = fiados.map(f => f.id === id ? { ...f, pago: true } : f);
+      salvar();
+      renderizar();
+    }
+
+    function quitarTudoCliente(chaveCliente, nomeExibicao) {
+      if (!confirm(`Confirmar pagamento de todos os fiados em aberto de ${nomeExibicao}?`)) return;
+      fiados = fiados.map(f => f.nome.toLowerCase() === chaveCliente ? { ...f, pago: true } : f);
+      salvar();
+      renderizar();
+    }
+
+    function excluir(id) {
+      if (!confirm('Remover este registo?')) return;
+      fiados = fiados.filter(f => f.id !== id);
+      salvar();
+      renderizar();
+    }
+
+    function mudarFiltro(novoFiltro) {
+      filtroAtual = novoFiltro;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab-${novoFiltro}`).classList.add('active');
+      renderizar();
+    }
+
+    function formatData(d) {
+      const [y, m, dia] = d.split('-');
+      return `${dia}/${m}`;
+    }
+
+    function formatMoeda(v) {
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderizar() {
+      const abertos = fiados.filter(f => !f.pago);
+      const pagos = fiados.filter(f => f.pago);
+      const totalDev = abertos.reduce((s, f) => s + f.valor, 0);
+      const totalPago = pagos.reduce((s, f) => s + f.valor, 0);
+      const nClientes = [...new Set(abertos.map(f => f.nome.toLowerCase()))].length;
+
+      document.getElementById('header-sub').textContent =
+        nClientes > 0 ? `${nClientes} cliente(s) com conta em aberto` : 'Todas as contas em dia!';
+
+      document.getElementById('resumo').innerHTML = `
+        <div class="card-resumo">
+          <div class="label">A receber</div>
+          <div class="valor" style="color:var(--danger)">${formatMoeda(totalDev)}</div>
+        </div>
+        <div class="card-resumo">
+          <div class="label">Devedores</div>
+          <div class="valor">${nClientes}</div>
+        </div>
+        <div class="card-resumo">
+          <div class="label">Recebido</div>
+          <div class="valor" style="color:var(--primary)">${formatMoeda(totalPago)}</div>
+        </div>
+      `;
+
+      const termoBusca = document.getElementById('inp-busca').value.trim().toLowerCase();
+
+      const clientesMap = {};
+      fiados.forEach(f => {
+        const k = f.nome.trim().toLowerCase();
+        if (!clientesMap[k]) clientesMap[k] = { chave: k, nome: f.nome.trim(), registros: [] };
+        clientesMap[k].registros.push(f);
+      });
+
+      let listaClientes = Object.values(clientesMap);
+
+      // Filtrar por busca
+      if (termoBusca) {
+        listaClientes = listaClientes.filter(c => c.nome.toLowerCase().includes(termoBusca));
+      }
+
+      // Filtrar por aba
+      listaClientes = listaClientes.filter(c => {
+        const temAberto = c.registros.some(r => !r.pago);
+        if (filtroAtual === 'abertos') return temAberto;
+        if (filtroAtual === 'quitados') return !temAberto;
+        return true;
+      });
+
+      // Ordenar: maior dívida primeiro
+      listaClientes.sort((a, b) => {
+        const divA = a.registros.filter(r => !r.pago).reduce((s, r) => s + r.valor, 0);
+        const divB = b.registros.filter(r => !r.pago).reduce((s, r) => s + r.valor, 0);
+        return divB - divA;
+      });
+
+      const listaEl = document.getElementById('lista-clientes');
+      if (listaClientes.length === 0) {
+        listaEl.innerHTML = `<div class="vazio">Nenhum cliente encontrado neste filtro.</div>`;
+        return;
+      }
+
+      listaEl.innerHTML = listaClientes.map(c => {
+        const ab = c.registros.filter(r => !r.pago).sort((a, b) => b.data.localeCompare(a.data));
+        const pg = c.registros.filter(r => r.pago);
+        const totAb = ab.reduce((s, r) => s + r.valor, 0);
+        const totPaes = ab.reduce((s, r) => s + r.paes, 0);
+        const iniciais = c.nome.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const nomeSeguro = c.nome.replace(/'/g, "\\'");
+
+        return `
+          <div class="cliente-card">
+            <div class="cliente-header">
+              <div class="cliente-perfil">
+                <div class="avatar">${iniciais}</div>
+                <div class="cliente-info">
+                  <div class="cliente-nome">${c.nome}</div>
+                  <div class="cliente-sub">
+                    ${ab.length > 0 ? `${totPaes} pães pendentes (${ab.length}x)` : 'Sem dívidas ativas'}
+                  </div>
+                </div>
+              </div>
+              <div class="cliente-total">
+                <div class="label">${ab.length > 0 ? 'Deve' : 'Status'}</div>
+                <div class="valor ${ab.length === 0 ? 'quitado' : ''}">
+                  ${ab.length > 0 ? formatMoeda(totAb) : 'Quitado'}
+                </div>
+              </div>
+            </div>
+
+            <div class="cliente-quick-actions">
+              <button class="btn-quick btn-quick-add" onclick="abrirModal('${nomeSeguro}')">
+                + Anotar pães
+              </button>
+              ${ab.length > 1 ? `
+                <button class="btn-quick btn-quick-payall" onclick="quitarTudoCliente('${c.chave.replace(/'/g, "\\'")}', '${nomeSeguro}')">
+                  ✓ Quitar tudo
+                </button>
+              ` : ''}
+            </div>
+
+            ${ab.length > 0 ? `
+              <div class="registros">
+                ${ab.map(r => `
+                  <div class="registro-row">
+                    <div>
+                      <span class="registro-data">${formatData(r.data)}</span>
+                      <span class="registro-paes">${r.paes} pães</span>
+                    </div>
+                    <div class="acoes">
+                      <span class="registro-valor">${formatMoeda(r.valor)}</span>
+                      <button class="btn-icon btn-pago" onclick="marcarPago(${r.id})">Pago</button>
+                      <button class="btn-icon btn-del" onclick="excluir(${r.id})">✕</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            ${pg.length > 0 ? `
+              <div class="pagos-info">
+                <span>✓ ${pg.length} pagamento(s) recebido(s)</span>
+                <span>${formatMoeda(pg.reduce((s, r) => s + r.valor, 0))}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    carregar();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/fiados/sw.js');
+    }
+  </script>
+</body>
+</html>
